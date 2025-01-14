@@ -567,5 +567,27 @@ public class TestLocalDirAllocator {
     // and expect to get a new file back
     dirAllocator.getLocalPathForWrite("file2", -1, conf);
   }
+
+  @Test
+  public void testInterrupt() throws Throwable {
+    String dir0 = buildBufferDir(ROOT, 0);
+    String subdir = dir0 + "/subdir1/subdir2";
+    conf.set(CONTEXT, subdir);
+
+      try {
+        Thread.currentThread().interrupt();
+        final Path pathForWrite = dirAllocator.getLocalPathForWrite("file", 100, conf);
+
+      } catch (DiskErrorException e) {
+        System.out.println("Got exception: " + e.getMessage());
+        //from now on, every call to getLocalPathForWrite will throw DiskErrorException
+        try {
+          dirAllocator.getLocalPathForWrite("file", 100, conf);
+        } catch (DiskErrorException ex) {
+          fail("Got exception again: " + e.getMessage());
+        }
+      }
+    }
+
 }
 
